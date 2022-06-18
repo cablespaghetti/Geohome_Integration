@@ -9,10 +9,10 @@ import json
 import threading
 import time
 from datetime import datetime
-from openhab import OpenHAB
+#from openhab import OpenHAB
 import os
 
-from loadconfig import savelogs, username, getGeohomePass, getOpenhabURL
+from loadconfig import savelogs, username, getGeohomePass
 
 import backoff
 
@@ -25,13 +25,13 @@ LOG_DIRECTORY = './logs/'
 num_max_retries = 20
 
 
-openhab = OpenHAB(getOpenhabURL())
-HouseElectricityPower = openhab.get_item('HouseElectricityPower')
-HouseElectricityMeterReading = openhab.get_item('HouseElectricityMeterReading')
-HouseGasMeterReading = openhab.get_item('HouseGasMeterReading')
-HouseGasPower = openhab.get_item('HouseGasPower')
-HouseMeterTimestamp = openhab.get_item('HouseMeterTimestamp')
-HousePowerTimestamp = openhab.get_item('HousePowerTimestamp')
+# openhab = OpenHAB(getOpenhabURL())
+# HouseElectricityPower = openhab.get_item('HouseElectricityPower')
+# HouseElectricityMeterReading = openhab.get_item('HouseElectricityMeterReading')
+# HouseGasMeterReading = openhab.get_item('HouseGasMeterReading')
+# HouseGasPower = openhab.get_item('HouseGasPower')
+# HouseMeterTimestamp = openhab.get_item('HouseMeterTimestamp')
+# HousePowerTimestamp = openhab.get_item('HousePowerTimestamp')
 
 
 @backoff.on_exception(
@@ -66,7 +66,7 @@ class GeoHome(threading.Thread):
     def authorise(self):
         data = {'identity': self.varUserName, 'password': self.varPassword}
         r = requests.post(BASE_URL+LOGIN_URL,
-                          data=json.dumps(data), verify=False)
+                          data=json.dumps(data))
         # print(r.text)
         authToken = json.loads(r.text)['accessToken']
         self.headers = {"Authorization": "Bearer " + authToken}
@@ -103,7 +103,8 @@ class GeoHome(threading.Thread):
                 else:
                     power_dict = json.loads(r.text)['power']
                     powertime = int(json.loads(r.text)['powerTimestamp'])
-                    HousePowerTimestamp.state = datetime.fromtimestamp(powertime)
+                    #HousePowerTimestamp.state = datetime.fromtimestamp(powertime)
+                    print(datetime.fromtimestamp(powertime))
                     if savelogs is True:
                         outfnam = datetime.now().strftime('live-%Y%m.json')
                         with open(outfnam, 'a') as outf:
@@ -117,7 +118,9 @@ class GeoHome(threading.Thread):
                         log = log + os.linesep + "No Electricity reading found"
                     else:
                         # Code executed ok so update the usage
-                        HouseElectricityPower.state = Electrcity_usage
+                        #HouseElectricityPower.state = Electrcity_usage
+                        print(Electrcity_usage)
+                        pass
                     try:
                         Gas_usage = (
                             [x for x in power_dict if x['type'] == 'GAS_ENERGY'][0]['watts'])
@@ -125,7 +128,9 @@ class GeoHome(threading.Thread):
                         # Cant find Gas in list. Add to log file but do nothing else
                         log = log + os.linesep + "No Gas reading found"
                     else:
-                        HouseGasPower.state = Gas_usage
+                        #HouseGasPower.state = Gas_usage
+                        print(Gas_usage)
+                        pass
             except Exception: 
                 print('unable to connect for realtime data')
             with open(LOG_DIRECTORY+"GeoHomeLog"+time.strftime("%Y%m%d")+".json", mode='a+', encoding='utf-8') as f:
@@ -147,7 +152,8 @@ class GeoHome(threading.Thread):
                             with open(outfnam, 'a') as outf:
                                 outf.write('{}\n'.format(r.text))
                         powertime = int(json.loads(r.text)['totalConsumptionTimestamp'])
-                        HouseMeterTimestamp.state = datetime.fromtimestamp(powertime)
+                        #HouseMeterTimestamp.state = datetime.fromtimestamp(powertime)
+                        print(datetime.fromtimestamp(powertime))
                         power_dict = json.loads(r.text)['totalConsumptionList']
                         # Try to find the electrivity usage
                         try:
@@ -158,7 +164,9 @@ class GeoHome(threading.Thread):
                             log = log + os.linesep + "No Electricity reading found"
                         else:
                             # Code executed ok so update the usage
-                            HouseElectricityMeterReading.state = Electrcity_usage
+                            #HouseElectricityMeterReading.state = Electrcity_usage
+                            print(Electrcity_usage)
+                            pass
                         try:
                             Gas_usage = (
                                 [x for x in power_dict if x['commodityType'] == 'GAS_ENERGY'][0]['totalConsumption'])
@@ -166,7 +174,9 @@ class GeoHome(threading.Thread):
                             # Cant find Gas in list. Add to log file but do nothing else
                             log = log + os.linesep + "No Gas reading found"
                         else:
-                            HouseGasMeterReading.state = float(Gas_usage)/1000
+                            #HouseGasMeterReading.state = float(Gas_usage)/1000
+                            print(float(Gas_usage)/1000)
+                            pass
                 except Exception:
                     print('unable to connect for periodic data')
 

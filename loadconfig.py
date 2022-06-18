@@ -1,7 +1,7 @@
 # config file
 import os
 
-username = 'mark.jm.mcintyre@cesmail.net'
+username = 'weston.sam@gmail.com'
 savelogs = False
 
 
